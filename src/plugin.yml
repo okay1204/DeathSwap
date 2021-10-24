@@ -1,0 +1,8 @@
+main: me.okay.DeathSwap.Main
+name: DeathSwap
+version: 1.0
+author: okay
+api-version: 1.17
+
+commands:
+  deathswap:
