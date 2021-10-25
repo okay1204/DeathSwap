@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -13,12 +14,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 public class CommandListener implements CommandExecutor, TabCompleter {
-    private Main main;
+    private DeathSwap deathSwap;
     private String helpMessage;
 
-    public CommandListener(Main mainClass) {
-        main = mainClass;
-        main.getCommand("manhunt").setExecutor(this);
+    public CommandListener(DeathSwap deathSwapClass) {
+        deathSwap = deathSwapClass;
 
         // setting helpMessage
         Map<String, String> commands = new HashMap<>();
@@ -34,6 +34,8 @@ public class CommandListener implements CommandExecutor, TabCompleter {
         for (Map.Entry<String, String> entry : commands.entrySet()) {
             helpMessage += "&7- &6/manhunt " + entry.getKey() + " &7- " + entry.getValue() + ".\n";
         }
+
+        helpMessage = ChatColor.translateAlternateColorCodes('&', helpMessage);
     }
 
     @Override
@@ -44,7 +46,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
         else if (args[0].equalsIgnoreCase("start")) {
             ArrayList<Player> players = new ArrayList<>();
 
-            for (Player player : main.getServer().getOnlinePlayers()) {
+            for (Player player : deathSwap.getServer().getOnlinePlayers()) {
                 if (player.getGameMode() == org.bukkit.GameMode.SURVIVAL) {
                     players.add(player);
                 }
