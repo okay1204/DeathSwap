@@ -36,7 +36,7 @@ public class DeathSwap extends JavaPlugin {
     }
 
     // returns the string colored by &
-    public String toColorString(String string) {
+    public static String toColorString(String string) {
         return ChatColor.translateAlternateColorCodes('&', string);
     }
 }
