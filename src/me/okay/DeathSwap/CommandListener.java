@@ -1,9 +1,9 @@
 package me.okay.DeathSwap;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -21,18 +21,18 @@ public class CommandListener implements CommandExecutor, TabCompleter {
         deathSwap = deathSwapClass;
 
         // setting helpMessage
-        Map<String, String> commands = new HashMap<>();
-        commands.put("start", "Starts the game of DeathSwap, where everyone currently in survival mode will be part of the game.");
+        Map<String, String> commands = new TreeMap<String, String>();
+        commands.put("start", "Starts the game of DeathSwap, where everyone currently in survival mode will be part of the game");
         commands.put("stop", "Ends the game of DeathSwap");
-        commands.put("settings swaptime <number>-<number>", "Sets the amount of time between swaps. The time will be a random time between the selected range.");
-        commands.put("settings fallkills <on|off>", "If on, players will be immune to fall damage after a teleport until they hit the ground.");
-        commands.put("settings lives <number>", "Sets the amount of lives each player has before they are eliminated.");
-        commands.put("help", "Displays this help menu.");
+        commands.put("settings swaptime <number>-<number>", "Sets the amount of time between swaps. The time will be a random time between the selected range");
+        commands.put("settings fallkills <on|off>", "If on, players will be immune to fall damage after a teleport until they hit the ground");
+        commands.put("settings lives <number>", "Sets the amount of lives each player has before they are eliminated");
+        commands.put("help", "Displays this help menu");
         
         helpMessage = "&7------[&6Deathswap&7]------\n";
     
         for (Map.Entry<String, String> entry : commands.entrySet()) {
-            helpMessage += "&7- &6/manhunt " + entry.getKey() + " &7- " + entry.getValue() + ".\n";
+            helpMessage += "&7- &6/deathswap " + entry.getKey() + " &7- " + entry.getValue() + ".\n";
         }
 
         helpMessage = ChatColor.translateAlternateColorCodes('&', helpMessage);
