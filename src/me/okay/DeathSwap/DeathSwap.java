@@ -19,7 +19,6 @@ public class DeathSwap extends JavaPlugin {
 
         game = new Game(this);
         pluginManager.registerEvents(game, this);
-
     }
 
     @Override
