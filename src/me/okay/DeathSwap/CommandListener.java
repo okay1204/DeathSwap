@@ -44,19 +44,13 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             sender.sendMessage(helpMessage);
         }
         else if (args[0].equalsIgnoreCase("start")) {
-            ArrayList<Player> players = new ArrayList<>();
+            ArrayList<Player> players = deathSwap.getGame().getSurvivalPlayers();
 
-            for (Player player : deathSwap.getServer().getOnlinePlayers()) {
-                if (player.getGameMode() == org.bukkit.GameMode.SURVIVAL) {
-                    players.add(player);
-                }
-            }
-
-            if (players.size() > 1) {
+            if (players.size() >= 2) {
                 // NOTE start game here
             }
             else {
-                sender.sendMessage("&cThere are not enough players to start the game. Make sure participants are in survival!");
+                sender.sendMessage("&cAt least 2 players are required to start the game. Make sure participants are in survival!");
             }
         }
         
