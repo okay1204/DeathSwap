@@ -35,7 +35,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             helpMessage += "&7- &6/deathswap " + entry.getKey() + " &7- " + entry.getValue() + ".\n";
         }
 
-        helpMessage = ChatColor.translateAlternateColorCodes('&', helpMessage);
+        helpMessage = deathSwap.toColorString(helpMessage);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
                 // NOTE start game here
             }
             else {
-                sender.sendMessage("&cAt least 2 players are required to start the game. Make sure participants are in survival!");
+                sender.sendMessage(deathSwap.toColorString("&cAt least 2 players are required to start the game. Make sure participants are in survival!"));
             }
         }
         

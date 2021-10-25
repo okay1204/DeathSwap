@@ -1,5 +1,6 @@
 package me.okay.DeathSwap;
 
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -32,5 +33,10 @@ public class DeathSwap extends JavaPlugin {
 
     public Game getGame() {
         return game;
+    }
+
+    // returns the string colored by &
+    public String toColorString(String string) {
+        return ChatColor.translateAlternateColorCodes('&', string);
     }
 }
