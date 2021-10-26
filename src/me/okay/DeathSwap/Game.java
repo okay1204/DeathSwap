@@ -6,11 +6,13 @@ import java.util.Collections;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -18,12 +20,17 @@ public class Game implements Listener {
     private final int LOWEST_TP_COORD = -9999999;
     private final int HIGHEST_TP_COORD = 9999999;
 
+    // Config settings
     private int minDelayMinutes;
     private int maxDelayMinutes;
+    private int countdownTimer;
 
     private DeathSwap deathSwap;
     private ArrayList<Player> participants;
     private BukkitTask teleportDelayTask;
+
+    // countdown
+    private int currentTimer = 10;
 
     public Game(DeathSwap deathSwapClass) {
         deathSwap = deathSwapClass;
@@ -31,6 +38,7 @@ public class Game implements Listener {
         // TODO set these to config values
         minDelayMinutes = 1;
         maxDelayMinutes = 2;
+        countdownTimer = 10;
     }
 
     // Starts the game with all players in survival mode
@@ -50,11 +58,72 @@ public class Game implements Listener {
         spawnPlayers();
         Bukkit.broadcastMessage(DeathSwap.toColorString("&a&lDone! &6Game starts now, good luck."));
 
+        scheduleTeleportDelay();
+    }
+
+    private long getTeleportDelay() {
+        return 20L * (long) (60 * (minDelayMinutes + (Math.random() * (maxDelayMinutes - minDelayMinutes))));
+    }
+
+    private void scheduleTeleportDelay() {
         BukkitScheduler scheduler = Bukkit.getScheduler();
 
         teleportDelayTask = scheduler.runTaskLater(deathSwap, () -> {
-            swapPlayers();
-        }, 20L * (long) (60 * (minDelayMinutes + (Math.random() * (maxDelayMinutes - minDelayMinutes)))));
+            teleportCountdown();
+        }, getTeleportDelay());
+    }
+
+    public boolean getGameActive() {
+        return teleportDelayTask != null;
+    }
+
+    public void stopGame() throws IllegalStateException {
+        if (getGameActive()) {
+            teleportDelayTask.cancel();
+            teleportDelayTask = null;
+        } else {
+            throw new IllegalStateException("Game is not active.");
+        }
+    }
+
+    private void teleportCountdown() {
+        currentTimer = countdownTimer;
+        BukkitScheduler scheduler = Bukkit.getScheduler();
+
+        scheduler.runTaskTimer(deathSwap, task -> {
+            if (currentTimer > 0) {
+                // use different color codes depending on the timer
+                char colorCode;
+                if (currentTimer >= 6) {
+                    colorCode = '2';
+                } else if (currentTimer == 5) {
+                    colorCode = 'a';
+                } else if (currentTimer == 4) {
+                    colorCode = 'e';
+                } else if (currentTimer == 3) {
+                    colorCode = '6';
+                } else if (currentTimer == 2) {
+                    colorCode = 'c';
+                } else {
+                    colorCode = '4';
+                }
+
+                for (Player player : deathSwap.getServer().getOnlinePlayers()) {
+                    player.sendTitle(" ", DeathSwap.toColorString("&" + colorCode + currentTimer), 5, 40, 0);
+                    player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 100, 1);
+                }
+
+                currentTimer--;
+            } else {
+                swapPlayers();
+                for (Player player : deathSwap.getServer().getOnlinePlayers()) {
+                    player.sendTitle(" ", DeathSwap.toColorString("&6" + "Swap!"), 5, 40, 0);
+                    player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_AMBIENT, 100, 1);
+                }
+                task.cancel();
+            }
+            // broadcast title to each player
+        }, 0L, 20L);
     }
 
     // Swaps all players with each other
@@ -72,6 +141,8 @@ public class Game implements Listener {
                 alivePlayers.get(i).teleport(alivePlayers.get(i + 1).getLocation());
             }
         }
+
+        scheduleTeleportDelay();
     }
 
     // Gets all players that are in survival mode
@@ -99,14 +170,22 @@ public class Game implements Listener {
             int yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
             Location teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
             
+            // avoids teleporting into an ocean
             while (teleportLocation.getBlock().getBiome().toString().contains("OCEAN")) {
-                xCoord += 50;
+                xCoord += 100;
                 yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
                 teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
             }
 
 
             player.teleport(teleportLocation);
+            player.setSaturation(20);
+            player.setFoodLevel(20);
+            player.setHealth(20);
+            for (PotionEffect effect : player.getActivePotionEffects()) {
+                player.removePotionEffect(effect.getType());
+            }
+            player.getInventory().clear();
         }
     }
 
