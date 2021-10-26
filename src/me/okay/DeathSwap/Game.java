@@ -6,15 +6,21 @@ import java.util.Collections;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -28,11 +34,12 @@ public class Game implements Listener {
     private int countdownTimer;
     private int totalLives;
     private boolean fallKills;
-    private boolean fireKills;
+    private boolean fireDamage;
 
 
     private DeathSwap deathSwap;
     private ArrayList<Player> participants;
+    private ArrayList<Player> fallImmune = new ArrayList<Player>();
     private BukkitTask teleportDelayTask;
 
     // countdown
@@ -48,7 +55,7 @@ public class Game implements Listener {
         totalLives = 1;
 
         fallKills = false;
-        fireKills = false;
+        fireDamage = false;
     }
 
     // Starts the game with all players in survival mode
@@ -68,6 +75,11 @@ public class Game implements Listener {
         spawnPlayers();
         Bukkit.broadcastMessage(DeathSwap.toColorString("&a&lDone! &6Game starts now, good luck."));
 
+        if (!fireDamage) {
+            for (Player player : participants) {
+                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+            }
+        }
         scheduleTeleportDelay();
     }
 
@@ -157,14 +169,20 @@ public class Game implements Listener {
 
         Location firstPlayerLocation = alivePlayers.get(0).getLocation();
         for (int i = 0; i < alivePlayers.size(); i++) {
+            Player player = alivePlayers.get(i);
+
             if (i == alivePlayers.size() - 1) {
-                alivePlayers.get(i).teleport(firstPlayerLocation);
+                player.teleport(firstPlayerLocation);
             }
             else {
-                alivePlayers.get(i).teleport(alivePlayers.get(i + 1).getLocation());
+                player.teleport(alivePlayers.get(i + 1).getLocation());
             }
 
-            alivePlayers.get(i).setFallDistance(0);
+            player.setFallDistance(0);
+            
+            if (!fallKills) {
+                fallImmune.add(player);
+            }
         }
 
         scheduleTeleportDelay();
@@ -239,6 +257,35 @@ public class Game implements Listener {
         if (getGameActive()) {
             Player player = event.getPlayer();
             player.setGameMode(GameMode.SPECTATOR);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+
+        if (getGameActive() && !fallKills && fallImmune.contains(player)) {
+            player.setFallDistance(0);
+
+            // check if the player is on the ground
+            if (((Entity) player).isOnGround()) {
+                fallImmune.remove(player);
+            }
+        }
+    }
+
+    @EventHandler()
+    public void onPlayerItemConsume(PlayerItemConsumeEvent event) {
+        Player player = event.getPlayer();
+
+        // keep fire res on player if fire damage is off
+        if (getGameActive() && !fireDamage && event.getItem().getType().equals(Material.MILK_BUCKET) && participants.contains(player)) {
+            BukkitScheduler scheduler = Bukkit.getScheduler();
+
+            // add fire resistance back 1 tick after
+            scheduler.runTaskLater(deathSwap, () -> {
+                event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+            }, 1L);
         }
     }
 }
