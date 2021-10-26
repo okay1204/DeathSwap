@@ -134,7 +134,7 @@ public class Game implements Listener {
         if (participants.size() <= 1) {
             Bukkit.broadcastMessage(DeathSwap.toColorString("&c&lGame over! &6" + participants.get(0).getName() + " &c&lwon!"));
             for (Player player : deathSwap.getServer().getOnlinePlayers()) {
-                player.sendTitle(DeathSwap.toColorString("&c&lGame over!"), DeathSwap.toColorString("&6" + participants.get(0).getName() + " &c&lwon!"), 5, 20 * 5, 0);
+                player.sendTitle(DeathSwap.toColorString("&c&lGame over!"), DeathSwap.toColorString("&6" + participants.get(0).getName() + " &c&lwon!"), 5, 20 * 5, 5);
                 player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 0.2f);
             }
             stopGame();
@@ -155,6 +155,8 @@ public class Game implements Listener {
             else {
                 alivePlayers.get(i).teleport(alivePlayers.get(i + 1).getLocation());
             }
+
+            alivePlayers.get(i).setFallDistance(0);
         }
 
         scheduleTeleportDelay();
