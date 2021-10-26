@@ -26,6 +26,10 @@ public class Game implements Listener {
     private int minDelayMinutes;
     private int maxDelayMinutes;
     private int countdownTimer;
+    private int totalLives;
+    private boolean fallKills;
+    private boolean fireKills;
+
 
     private DeathSwap deathSwap;
     private ArrayList<Player> participants;
@@ -41,6 +45,10 @@ public class Game implements Listener {
         minDelayMinutes = 1;
         maxDelayMinutes = 2;
         countdownTimer = 10;
+        totalLives = 1;
+
+        fallKills = false;
+        fireKills = false;
     }
 
     // Starts the game with all players in survival mode
@@ -208,7 +216,7 @@ public class Game implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        if (participants.contains(event.getPlayer())) {
+        if (getGameActive() && participants.contains(event.getPlayer())) {
             participants.remove(event.getPlayer());
 
             // TODO allow player to be disconnected for maximum of 1 minute as long as before swap
@@ -220,7 +228,7 @@ public class Game implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-        if (participants.contains(player)) {
+        if (getGameActive() && participants.contains(player)) {
             participants.remove(player);
             checkGameOver();
         }
