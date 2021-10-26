@@ -44,12 +44,13 @@ public class CommandListener implements CommandExecutor, TabCompleter {
         }
         else if (args[0].equalsIgnoreCase("start")) {
             ArrayList<Player> players = deathSwap.getGame().getSurvivalPlayers();
-
-            if (players.size() >= 2) {
-                deathSwap.getGame().startGame(players);
-            }
-            else {
+            
+            if (deathSwap.getGame().getGameActive()) {
+                sender.sendMessage(DeathSwap.toColorString("&cThe game is already active!"));
+            } else if (players.size() < 2) {
                 sender.sendMessage(DeathSwap.toColorString("&cAt least 2 players are required to start the game. Make sure participants are in survival!"));
+            } else {
+                deathSwap.getGame().startGame(players);
             }
         }
         

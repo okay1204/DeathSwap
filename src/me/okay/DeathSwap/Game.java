@@ -11,7 +11,9 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
@@ -91,7 +93,7 @@ public class Game implements Listener {
         BukkitScheduler scheduler = Bukkit.getScheduler();
 
         scheduler.runTaskTimer(deathSwap, task -> {
-            if (currentTimer > 0) {
+            if (currentTimer > 0 && getGameActive()) {
                 // use different color codes depending on the timer
                 char colorCode;
                 if (currentTimer >= 6) {
@@ -115,15 +117,28 @@ public class Game implements Listener {
 
                 currentTimer--;
             } else {
-                swapPlayers();
-                for (Player player : deathSwap.getServer().getOnlinePlayers()) {
-                    player.sendTitle(" ", DeathSwap.toColorString("&6" + "Swap!"), 5, 40, 0);
-                    player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_AMBIENT, 100, 1);
+                if (getGameActive()) {
+                    swapPlayers();
+                    for (Player player : deathSwap.getServer().getOnlinePlayers()) {
+                        player.sendTitle(" ", DeathSwap.toColorString("&6" + "Swap!"), 5, 40, 0);
+                        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_AMBIENT, 100, 1);
+                    }
                 }
+                
                 task.cancel();
             }
-            // broadcast title to each player
         }, 0L, 20L);
+    }
+
+    public void checkGameOver() {
+        if (participants.size() <= 1) {
+            Bukkit.broadcastMessage(DeathSwap.toColorString("&c&lGame over! &6" + participants.get(0).getName() + " &c&lwon!"));
+            for (Player player : deathSwap.getServer().getOnlinePlayers()) {
+                player.sendTitle(DeathSwap.toColorString("&c&lGame over!"), DeathSwap.toColorString("&6" + participants.get(0).getName() + " &c&lwon!"), 5, 20 * 5, 0);
+                player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 100, 0.2f);
+            }
+            stopGame();
+        }
     }
 
     // Swaps all players with each other
@@ -194,7 +209,26 @@ public class Game implements Listener {
         if (participants.contains(event.getPlayer())) {
             participants.remove(event.getPlayer());
 
-            // TODO check if game is over
+            // TODO allow player to be disconnected for maximum of 1 minute as long as before swap
+            checkGameOver();
+        }
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+
+        if (participants.contains(player)) {
+            participants.remove(player);
+            checkGameOver();
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        if (getGameActive()) {
+            Player player = event.getPlayer();
+            player.setGameMode(GameMode.SPECTATOR);
         }
     }
 }
