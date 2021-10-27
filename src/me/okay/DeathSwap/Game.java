@@ -9,14 +9,15 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
@@ -35,6 +36,7 @@ public class Game implements Listener {
     private int totalLives;
     private boolean fallKills;
     private boolean fireDamage;
+    private boolean netherEnabled;
 
 
     private DeathSwap deathSwap;
@@ -56,6 +58,7 @@ public class Game implements Listener {
 
         fallKills = false;
         fireDamage = false;
+        netherEnabled = false;
     }
 
     // Starts the game with all players in survival mode
@@ -286,6 +289,16 @@ public class Game implements Listener {
             scheduler.runTaskLater(deathSwap, () -> {
                 event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
             }, 1L);
+        }
+    }
+
+    @EventHandler()
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        Player player = event.getPlayer();
+
+        if (getGameActive() && !netherEnabled && participants.contains(player) && event.getTo().getWorld().getEnvironment().equals(Environment.NETHER)) {
+            event.setCancelled(true);
+            player.sendMessage(DeathSwap.toColorString("&cThe nether is disabled during the game. &7&oUse &8&o/deathswap nether on &7&oto enable it."));
         }
     }
 }
