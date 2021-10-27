@@ -171,15 +171,25 @@ public class Game implements Listener {
         Collections.shuffle(alivePlayers);
 
         Location firstPlayerLocation = alivePlayers.get(0).getLocation();
+        String firstPlayerName = alivePlayers.get(0).getName();
+
+        Bukkit.broadcastMessage(DeathSwap.toColorString("&6&lSwap!"));
         for (int i = 0; i < alivePlayers.size(); i++) {
             Player player = alivePlayers.get(i);
+            String swapMessage;
 
             if (i == alivePlayers.size() - 1) {
                 player.teleport(firstPlayerLocation);
+                swapMessage = "&6&o" + player.getName() + " &e&o-> &6&o" + firstPlayerName;
             }
             else {
-                player.teleport(alivePlayers.get(i + 1).getLocation());
+                Player nextPlayer = alivePlayers.get(i + 1);
+
+                player.teleport(nextPlayer.getLocation());
+                swapMessage = "&6&o" + player.getName() + " &e&o-> &6&o" + nextPlayer.getName();
             }
+
+            Bukkit.broadcastMessage(DeathSwap.toColorString(swapMessage));
 
             player.setFallDistance(0);
             
