@@ -2,9 +2,13 @@ package me.okay.DeathSwap;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -40,7 +44,8 @@ public class Game implements Listener {
 
 
     private DeathSwap deathSwap;
-    private ArrayList<Player> participants;
+    private Map<UUID, Integer> participantLives = new TreeMap<UUID, Integer>();
+    private ArrayList<Player> participants = new ArrayList<Player>();
     private ArrayList<Player> fallImmune = new ArrayList<Player>();
     private BukkitTask teleportDelayTask;
 
@@ -54,7 +59,7 @@ public class Game implements Listener {
         minDelayMinutes = 1;
         maxDelayMinutes = 2;
         countdownTimer = 10;
-        totalLives = 1;
+        totalLives = 2;
 
         fallKills = false;
         fireDamage = false;
@@ -73,6 +78,10 @@ public class Game implements Listener {
         }
 
         participants = players;
+        for (Player player : participants) {
+            participantLives.put(player.getUniqueId(), totalLives);
+            setPlayerListName(player, totalLives);
+        }
 
         Bukkit.broadcastMessage(DeathSwap.toColorString("&6&oTeleporting players..."));
         spawnPlayers();
@@ -106,6 +115,8 @@ public class Game implements Listener {
         if (getGameActive()) {
             teleportDelayTask.cancel();
             teleportDelayTask = null;
+            participants.clear();
+            participantLives.clear();
         } else {
             throw new IllegalStateException("Game is not active.");
         }
@@ -214,27 +225,34 @@ public class Game implements Listener {
         return players;
     }
 
-    // teleports players to random locations
-    private void spawnPlayers() {
+    // finds random spawn location and makes sure its not an ocean, then teleports player there
+    private Location randomTeleportLocation() {
 
         World world = Bukkit.getWorld("world");
 
+        int xCoord = (int) Math.floor(Math.random() * (HIGHEST_TP_COORD - LOWEST_TP_COORD) + LOWEST_TP_COORD);
+        int zCoord = (int) Math.floor(Math.random() * (HIGHEST_TP_COORD - LOWEST_TP_COORD) + LOWEST_TP_COORD);
+
+        int yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
+        Location teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
+        
+        // avoids teleporting into an ocean
+        while (teleportLocation.getBlock().getBiome().toString().contains("OCEAN")) {
+            xCoord += 100;
+            yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
+            teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
+        }
+
+        return teleportLocation;
+    }
+
+    // teleports players to random locations
+    private void spawnPlayers() {
+
         for (Player player : participants) {
-            int xCoord = (int) Math.floor(Math.random() * (HIGHEST_TP_COORD - LOWEST_TP_COORD) + LOWEST_TP_COORD);
-            int zCoord = (int) Math.floor(Math.random() * (HIGHEST_TP_COORD - LOWEST_TP_COORD) + LOWEST_TP_COORD);
-
-            int yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
-            Location teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
-            
-            // avoids teleporting into an ocean
-            while (teleportLocation.getBlock().getBiome().toString().contains("OCEAN")) {
-                xCoord += 100;
-                yCoord = world.getHighestBlockYAt(xCoord, zCoord) + 1;
-                teleportLocation = new Location(world, xCoord + 0.5, yCoord, zCoord + 0.5);
-            }
-
-
+            Location teleportLocation = randomTeleportLocation();
             player.teleport(teleportLocation);
+
             player.setSaturation(20);
             player.setFoodLevel(20);
             player.setHealth(20);
@@ -245,10 +263,30 @@ public class Game implements Listener {
         }
     }
 
+    private void setPlayerListName(Player player, int lives) {
+        player.setPlayerListName(DeathSwap.toColorString(player.getName() + "&6" + " - " + lives + (lives == 1 ? " life" : " lives")));
+    }
+
+    // handle player loss
+    private void playerLoss(Player player) {
+        int lives = participantLives.get(player.getUniqueId());
+        lives--;
+
+        if (lives > 0) {
+            participantLives.put(player.getUniqueId(), lives);
+            setPlayerListName(player, lives);
+        } else {
+            participantLives.remove(player.getUniqueId());
+            participants.remove(player);
+            Bukkit.broadcastMessage(DeathSwap.toColorString("&4&l&k5&6&l" + player.getName() + " &c&lhas been eliminated!&4&l&k5"));
+            player.setPlayerListName(player.getName());
+        }
+    }
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (getGameActive() && participants.contains(event.getPlayer())) {
-            participants.remove(event.getPlayer());
+            playerLoss(event.getPlayer());
 
             // TODO allow player to be disconnected for maximum of 1 minute as long as before swap
             checkGameOver();
@@ -258,10 +296,18 @@ public class Game implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
-
+        
         if (getGameActive() && participants.contains(player)) {
-            participants.remove(player);
+            event.setKeepInventory(true);
+            playerLoss(player);
             checkGameOver();
+
+            // TODO make sure game doesnt break if player is dead during swap
+            if (getGameActive() && participants.contains(player)) {
+                Bukkit.getScheduler().runTaskLater(deathSwap, () -> {
+                    player.spigot().respawn();
+                }, 20L * 5);
+            }
         }
     }
 
@@ -269,7 +315,12 @@ public class Game implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         if (getGameActive()) {
             Player player = event.getPlayer();
-            player.setGameMode(GameMode.SPECTATOR);
+
+            if (participants.contains(player)) {
+                event.setRespawnLocation(randomTeleportLocation());
+            } else {
+                player.setGameMode(GameMode.SPECTATOR);
+            }
         }
     }
 
