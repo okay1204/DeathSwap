@@ -115,6 +115,9 @@ public class Game implements Listener {
         if (getGameActive()) {
             teleportDelayTask.cancel();
             teleportDelayTask = null;
+            for (Player player : participants) {
+                player.setPlayerListName(player.getName());
+            }
             participants.clear();
             participantLives.clear();
         } else {
