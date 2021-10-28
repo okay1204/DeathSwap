@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -32,6 +31,7 @@ import org.bukkit.scheduler.BukkitTask;
 public class Game implements Listener {
     private final int LOWEST_TP_COORD = -9999999;
     private final int HIGHEST_TP_COORD = 9999999;
+    private final PotionEffect fireRes = new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false);
 
     // Config settings
     private int minDelayMinutes;
@@ -89,7 +89,7 @@ public class Game implements Listener {
 
         if (!fireDamage) {
             for (Player player : participants) {
-                player.addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+                player.addPotionEffect(fireRes);
             }
         }
         scheduleTeleportDelay();
@@ -290,8 +290,6 @@ public class Game implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (getGameActive() && participants.contains(event.getPlayer())) {
             playerLoss(event.getPlayer());
-
-            // TODO allow player to be disconnected for maximum of 1 minute as long as before swap
             checkGameOver();
         }
     }
@@ -305,7 +303,6 @@ public class Game implements Listener {
             playerLoss(player);
             checkGameOver();
 
-            // TODO make sure game doesnt break if player is dead during swap
             if (getGameActive() && participants.contains(player)) {
                 Bukkit.getScheduler().runTaskLater(deathSwap, () -> {
                     player.spigot().respawn();
@@ -321,6 +318,12 @@ public class Game implements Listener {
 
             if (participants.contains(player)) {
                 event.setRespawnLocation(randomTeleportLocation());
+
+                if (!fireDamage) {
+                    Bukkit.getScheduler().runTaskLater(deathSwap, () -> {
+                        player.addPotionEffect(fireRes);
+                    }, 1L);
+                }
             } else {
                 player.setGameMode(GameMode.SPECTATOR);
             }
@@ -351,7 +354,7 @@ public class Game implements Listener {
 
             // add fire resistance back 1 tick after
             scheduler.runTaskLater(deathSwap, () -> {
-                event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.FIRE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+                event.getPlayer().addPotionEffect(fireRes);
             }, 1L);
         }
     }
