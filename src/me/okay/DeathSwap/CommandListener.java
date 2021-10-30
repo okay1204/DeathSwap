@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.TreeMap;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,6 +17,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
     private DeathSwap deathSwap;
     private String helpMessage;
     private Map<String, String> commands = new TreeMap<String, String>();
+    private String noPermsMessage = DeathSwap.toColorString("&cYou do not have permission to use this comannd. &7(deathswap.setup)");
 
     public CommandListener(DeathSwap deathSwapClass) {
         deathSwap = deathSwapClass;
@@ -58,6 +58,11 @@ public class CommandListener implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Game game = deathSwap.getGame();
+
+        if (!sender.hasPermission("deathswap.setup")) {
+            sender.sendMessage(noPermsMessage);
+            return true;
+        }
 
         if (args.length == 0) {
             sender.sendMessage(helpMessage);
