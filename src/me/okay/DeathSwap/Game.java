@@ -66,6 +66,83 @@ public class Game implements Listener {
         netherEnabled = false;
     }
 
+    public int getMinDelayMinutes() {
+        return minDelayMinutes;
+    }
+
+    public int getMaxDelayMinutes() {
+        return maxDelayMinutes;
+    }
+
+    public int getCountdownTimer() {
+        return countdownTimer;
+    }
+
+    public int getLives() {
+        return totalLives;
+    }
+
+    public boolean getFallKills() {
+        return fallKills;
+    }
+
+    public boolean getFireDamage() {
+        return fireDamage;
+    }
+
+    public boolean getNetherEnabled() {
+        return netherEnabled;
+    }
+
+    public void setSwapTime(int min, int max) throws IllegalArgumentException {
+        if (min < 0 || max < 0) {
+            throw new IllegalArgumentException("Swap time must be positive");
+        } else if (max < min) {
+            throw new IllegalArgumentException("Max swap time must be greater than min swap time");
+        }
+
+        minDelayMinutes = min;
+        maxDelayMinutes = max;
+    }
+
+    public void setCountdownTimer(int timer) throws IllegalArgumentException {
+        if (timer < 0) {
+            throw new IllegalArgumentException("Countdown timer must be positive");
+        }
+
+        countdownTimer = timer;
+    }
+
+    public void setFallKills(boolean newFallKills) {
+        fallKills = newFallKills;
+    }
+
+    public void setFireDamage(boolean newFireDamage) {
+        fireDamage = newFireDamage;
+
+        if (getGameActive()) {
+            for (Player player: participants) {
+                if (!fireDamage) {
+                    player.addPotionEffect(fireRes);
+                } else {
+                    player.removePotionEffect(PotionEffectType.FIRE_RESISTANCE);
+                }
+            }
+        }
+    }
+
+    public void setNetherEnabled(boolean newNetherEnabled) {
+        netherEnabled = newNetherEnabled;
+    }
+
+    public void setLives(int newLives) throws IllegalArgumentException {
+        if (newLives < 0) {
+            throw new IllegalArgumentException("Lives must be positive");
+        }
+
+        totalLives = newLives;
+    }
+
     // Starts the game with all players in survival mode
     public void startGame() throws IllegalArgumentException {
         startGame(getSurvivalPlayers());
