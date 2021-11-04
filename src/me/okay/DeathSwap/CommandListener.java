@@ -29,7 +29,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
         commands.put("swaptime <minimum> <maximum>", "Sets the amount of minutes between swaps. The time will be a random time between the selected range.");
         commands.put("countdown <seconds>", "Sets the amount of seconds the countdown timer will tick down before a swap.");
         commands.put("fallkills <on|off>", "If off, players will be immune to fall damage after a swap until they hit the ground.");
-        commands.put("firedamage <on|off>", "If on, players will have permanent fire resistance.");
+        commands.put("firedamage <on|off>", "If off, players will have permanent fire resistance.");
         commands.put("allownether <on|off>", "If off, players will not be able to travel to the nether.");
         commands.put("lives <amount>", "Sets the amount of lives each player has before they are eliminated.");
         commands.put("settings", "Displays all settings currently configured, as well as defaults.");
