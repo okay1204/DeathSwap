@@ -1,0 +1,14 @@
+# swapTimer: Random delay time between each swap
+# countdownTimer: Number of seconds in the countdown before a swap
+# fallKills: If false, players will be immune to fall damage until they hit the ground after a swap
+# netherEnabled: If false, players cannot portal to the nether
+# fireDamage: If false, players will have permanent fire resistance
+# lives: Sets the amount of lives each player has before they lose
+swapTimer:
+  minMinutes: 5
+  maxMinutes: 10
+countdownTimer: 10
+fallKills: true
+netherEnabled: true
+fireDamage: true
+lives: 1

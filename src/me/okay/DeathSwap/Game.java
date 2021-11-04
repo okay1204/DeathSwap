@@ -52,18 +52,16 @@ public class Game implements Listener {
     // countdown
     private int currentTimer = 10;
 
-    public Game(DeathSwap deathSwapClass) {
+    public Game(DeathSwap deathSwapClass, int initMinDelayMinutes, int initMaxDelayMinutes, int initCountdownTimer, int initTotalLives, boolean initFallKills, boolean initFireDamage, boolean initNetherEnabled) {
         deathSwap = deathSwapClass;
 
-        // TODO set these to config values
-        minDelayMinutes = 1;
-        maxDelayMinutes = 2;
-        countdownTimer = 10;
-        totalLives = 2;
-
-        fallKills = false;
-        fireDamage = false;
-        netherEnabled = false;
+        minDelayMinutes = initMinDelayMinutes;
+        maxDelayMinutes = initMaxDelayMinutes;
+        countdownTimer = initCountdownTimer;
+        totalLives = initTotalLives;
+        fallKills = initFallKills;
+        fireDamage = initFireDamage;
+        netherEnabled = initNetherEnabled;
     }
 
     public int getMinDelayMinutes() {

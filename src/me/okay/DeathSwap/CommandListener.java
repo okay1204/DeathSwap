@@ -10,6 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
@@ -58,6 +59,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         Game game = deathSwap.getGame();
+        FileConfiguration config = deathSwap.getConfig();
 
         if (!sender.hasPermission("deathswap.setup")) {
             sender.sendMessage(noPermsMessage);
@@ -105,6 +107,8 @@ public class CommandListener implements CommandExecutor, TabCompleter {
                         sender.sendMessage(DeathSwap.toColorString("&cThe minimum swap time must be less than the maximum swap time."));
                     } else {
                         game.setSwapTime(min, max);
+                        config.set("swapTime.minMinutes", min);
+                        config.set("swapTime.maxMinutes", max);
                         sender.sendMessage(DeathSwap.toColorString("&aSet minimum time to &2" + min + "&a and maximum time to &2" + max + "&a."));
                     }
                 } catch (NumberFormatException e) {
@@ -123,6 +127,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
                         sender.sendMessage(DeathSwap.toColorString("&cThe countdown timer must be a positive integer."));
                     } else {
                         game.setCountdownTimer(seconds);
+                        config.set("countdownTimer", seconds);
                         sender.sendMessage(DeathSwap.toColorString("&aSet countdown timer to &2" + seconds + "&a."));
                     }
                 } catch (NumberFormatException e) {
@@ -136,9 +141,11 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             if (args.length == 2) {
                 if (args[1].equalsIgnoreCase("on")) {
                     game.setFallKills(true);
+                    config.set("fallKills", true);
                     sender.sendMessage(DeathSwap.toColorString("&aFall kills are now &2enabled&a."));
                 } else if (args[1].equalsIgnoreCase("off")) {
                     game.setFallKills(false);
+                    config.set("fallKills", false);
                     sender.sendMessage(DeathSwap.toColorString("&aFall kills are now &cdisabled&a."));
                 } else {
                     sender.sendMessage(usageMessage(args[0]));
@@ -151,9 +158,11 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             if (args.length == 2) {
                 if (args[1].equalsIgnoreCase("on")) {
                     game.setFireDamage(true);
+                    config.set("fireDamage", true);
                     sender.sendMessage(DeathSwap.toColorString("&aFire damage is now &2enabled&a."));
                 } else if (args[1].equalsIgnoreCase("off")) {
                     game.setFireDamage(false);
+                    config.set("fireDamage", false);
                     sender.sendMessage(DeathSwap.toColorString("&aFire damage is now &cdisabled&a."));
                 } else {
                     sender.sendMessage(usageMessage(args[0]));
@@ -166,9 +175,11 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             if (args.length == 2) {
                 if (args[1].equalsIgnoreCase("on")) {
                     game.setNetherEnabled(true);
+                    config.set("netherEnabled", true);
                     sender.sendMessage(DeathSwap.toColorString("&aNether is now &2enabled&a."));
                 } else if (args[1].equalsIgnoreCase("off")) {
                     game.setNetherEnabled(false);
+                    config.set("netherEnabled", false);
                     sender.sendMessage(DeathSwap.toColorString("&aNether is now &cdisabled&a."));
                 } else {
                     sender.sendMessage(usageMessage(args[0]));
@@ -186,6 +197,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
                         sender.sendMessage(DeathSwap.toColorString("&cThe amount of lives must be a positive integer."));
                     } else {
                         game.setLives(lives);
+                        config.set("lives", lives);
                         sender.sendMessage(DeathSwap.toColorString("&aSet amount of lives to &2" + lives + "&a."));
                     }
                 } catch (NumberFormatException e) {
@@ -213,6 +225,7 @@ public class CommandListener implements CommandExecutor, TabCompleter {
             sender.sendMessage(helpMessage);
         }
 
+        deathSwap.saveConfig();
         return true;
     }
 
